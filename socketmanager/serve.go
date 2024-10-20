@@ -7,11 +7,12 @@ import (
 	"github.com/gorilla/websocket"
 
 	"binance-orderbook-average/common"
+	"binance-orderbook-average/constant"
 )
 
 var upgrader = websocket.Upgrader{
-	ReadBufferSize:  4096,
-	WriteBufferSize: 4096,
+	ReadBufferSize:  constant.WebSocketReadBufferSize,
+	WriteBufferSize: constant.WebSocketWriteBufferSize,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},

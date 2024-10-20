@@ -9,6 +9,7 @@ import (
 
 	"binance-orderbook-average/api"
 	"binance-orderbook-average/common"
+	"binance-orderbook-average/constant"
 	"binance-orderbook-average/dependency"
 	"binance-orderbook-average/exsource"
 	"binance-orderbook-average/price"
@@ -33,12 +34,10 @@ func main() {
 		common.Logger().Fatal(err)
 	}
 
-	workerCount := 500
-	taskBuffer := 100000
-	managerWorkerPool := workerpool.New(workerCount, taskBuffer)
+	managerWorkerPool := workerpool.New(constant.WorkerCount, constant.TaskBuffer)
 
 	common.Logger().Info("Initializing manager")
-	manager := socketmanager.New(10000, managerWorkerPool)
+	manager := socketmanager.New(constant.ManagerMaxActiveConn, managerWorkerPool)
 	common.Logger().Info("Manager initialized")
 
 	common.Logger().Info("Starting to broadcast average prices")

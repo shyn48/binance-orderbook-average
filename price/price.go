@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"binance-orderbook-average/common"
+	"binance-orderbook-average/constant"
 	"binance-orderbook-average/exsource"
 	"binance-orderbook-average/socketmanager"
 	"binance-orderbook-average/types"
@@ -48,8 +49,7 @@ func BroadcastAveragePrice(es *exsource.Exsource, sm *socketmanager.Manager) {
 		common.Logger().Fatalf("error starting Binance stream: %v", err)
 	}
 
-	batchInterval := 300 * time.Millisecond
-	ticker := time.NewTicker(batchInterval)
+	ticker := time.NewTicker(constant.ThrottlingInterval)
 	defer ticker.Stop()
 
 	var lastDepthUpdate *types.BinanceDepthUpdate
