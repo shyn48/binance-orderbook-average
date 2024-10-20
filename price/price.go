@@ -81,7 +81,7 @@ func BroadcastAveragePrice(es *exsource.Exsource, sm *socketmanager.Manager) {
 					continue
 				}
 
-				sm.BroadCastMsg(serializedMessage)
+				sm.BroadcastMsg(serializedMessage)
 
 				lastDepthUpdate = nil
 			}

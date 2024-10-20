@@ -15,7 +15,7 @@ type ManagerTask struct {
 }
 
 type Manager struct {
-	BroadCastMsg func([]byte)
+	BroadcastMsg func([]byte)
 	Shutdown     func()
 
 	processTask func(workerpool.Task)
@@ -44,7 +44,7 @@ func New(maxActiveConn int64, workerPool *workerpool.WorkerPool) *Manager {
 		quit:          make(chan struct{}),
 	}
 
-	manager.BroadCastMsg = broadcastMsg(manager)
+	manager.BroadcastMsg = broadcastMsg(manager)
 	manager.processTask = processTask(manager)
 	manager.Shutdown = shutdown(manager)
 
