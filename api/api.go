@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
-	"binance-orderbook-average/clientmanager"
+	"binance-orderbook-average/socketmanager"
 )
 
-func Setup(cm *clientmanager.ClientManager) {
+func Setup(sm *socketmanager.Manager) {
 	// Root route
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "HelloWorld")
 	})
 
 	// WebSocket route for average price
-	http.HandleFunc("/average-price", cm.HandleConnections)
+	http.HandleFunc("/average-price", socketmanager.ServeWs(sm))
 }

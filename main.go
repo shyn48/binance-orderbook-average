@@ -1,61 +1,66 @@
-// main.go
-
 package main
 
 import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 
 	"binance-orderbook-average/api"
-	"binance-orderbook-average/clientmanager"
 	"binance-orderbook-average/common"
-	"binance-orderbook-average/core"
 	"binance-orderbook-average/dependency"
 	"binance-orderbook-average/exsource"
+	"binance-orderbook-average/price"
+	"binance-orderbook-average/socketmanager"
+	"binance-orderbook-average/workerpool"
 )
 
 func main() {
-	// Load the configuration
 	config, err := common.GetConfig()
 	if err != nil {
 		common.Logger().Fatal(err)
 	}
 
-	// Initialize dependencies (Binance WebSocket connection)
 	d, gracefulClose, err := dependency.New(config)
 	if err != nil {
 		common.Logger().Fatal(err)
 	}
 	defer gracefulClose()
 
-	// Initialize WebSocket call handler
 	es := exsource.New(d)
 	if err != nil {
 		common.Logger().Fatal(err)
 	}
 
-	// Initialize the client manager
-	fmt.Println("Initializing client manager")
-	cm := clientmanager.NewClientManager()
-	fmt.Println("Client manager initialized")
+	workerCount := 500
+	taskBuffer := 100000
+	managerWorkerPool := workerpool.New(workerCount, taskBuffer)
 
-	// Setup API routes
-	fmt.Println("Setting up API routes")
-	api.Setup(cm)
-	fmt.Println("API routes set up")
+	common.Logger().Info("Initializing manager")
+	manager := socketmanager.New(10000, managerWorkerPool)
+	common.Logger().Info("Manager initialized")
 
-	fmt.Println("Starting client manager")
-	go cm.StartBroadcasting()
-	fmt.Println("Client manager started")
+	common.Logger().Info("Starting to broadcast average prices")
+	go price.BroadcastAveragePrice(es, manager)
+	common.Logger().Info("Started broadcasting average prices")
 
-	// Start broadcasting average prices
-	fmt.Println("Starting to broadcast average prices")
-	go core.BroadcastAveragePrice(es, cm)
-	fmt.Println("Started broadcasting average prices")
+	api.Setup(manager)
 
-	// Start the HTTP server
-	common.Logger().Infof("Starting server on port %d", config.Port)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+
+	go func() {
+		<-quit
+		common.Logger().Info("Shutting down server...")
+
+		manager.Shutdown()
+
+		common.Logger().Info("Server gracefully stopped.")
+		os.Exit(0)
+	}()
+
+	common.Logger().Printf("Starting server on port %d", config.Port)
 	err = http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil)
 	if err != nil {
 		log.Fatalf("ListenAndServe: %v", err)

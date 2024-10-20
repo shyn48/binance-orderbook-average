@@ -5,3 +5,8 @@ type BinanceDepthUpdate struct {
 	Bids         [][]string `json:"bids"`
 	Asks         [][]string `json:"asks"`
 }
+
+type Message struct {
+	Type string      `json:"type"`
+	Data interface{} `json:"data"`
+}
